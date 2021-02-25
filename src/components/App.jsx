@@ -1,11 +1,11 @@
 import React from 'react';
 import Channels from './Channels.jsx';
-import Chat from './Chat.jsx';
+import Messages from './Messages.jsx';
 
 const App = () => (
   <div className="row h-100 pb-3">
     <Channels />
-    <Chat />
+    <Messages />
   </div>
 );
 

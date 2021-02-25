@@ -2,13 +2,11 @@ import React from 'react';
 import {
   Nav, NavItem, Button, ButtonGroup, Dropdown,
 } from 'react-bootstrap';
-import { connect, useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import cn from 'classnames';
 import getModal from './modals';
 import { actions as modalActions } from '../slices/modal.js';
-import { actions, addChannel } from '../slices/channels.js';
-
-const mapDispatch = { addChannel };
+import { actions } from '../slices/channels.js';
 
 const renderChannels = (channel, currentChannelId, dispatch, showModal) => {
   const { name, id, removable } = channel;
@@ -68,8 +66,8 @@ const Channels = () => {
   const hideModal = () => dispatch(closeModal());
   const showModal = (type, item = null) => dispatch(openModal({ type, item }));
   const modalInfo = useSelector((state) => state.modal);
-  const currentChannelId = useSelector((state) => state.channels.currentChannelId);
-  const channels = useSelector((state) => state.channels.channels);
+  const currentChannelId = useSelector((state) => state.channelsInfo.currentChannelId);
+  const channels = useSelector((state) => state.channelsInfo.channels);
 
   return (
     <div className="col-3 border-right">
@@ -85,7 +83,4 @@ const Channels = () => {
   );
 };
 
-export default connect(
-  null,
-  mapDispatch,
-)(Channels);
+export default Channels;

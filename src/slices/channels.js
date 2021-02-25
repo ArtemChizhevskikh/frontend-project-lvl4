@@ -1,20 +1,14 @@
 /* eslint no-param-reassign: "error" */
 
-import axios from 'axios';
 import { createSlice } from '@reduxjs/toolkit';
-import routes from '../routes.js';
 
-const channels = createSlice({
-  name: 'chat',
+const channelsSlice = createSlice({
+  name: 'channelsInfo',
   initialState: {
     channels: [],
     currentChannelId: null,
   },
   reducers: {
-    fetchChannels(state, { payload }) {
-      state.channels = payload.channels;
-      state.currentChannelId = payload.currentChannelId;
-    },
     newChannel(state, { payload }) {
       const { attributes } = payload;
       state.channels.push(attributes);
@@ -36,48 +30,6 @@ const channels = createSlice({
   },
 });
 
-const addChannel = async (name) => {
-  const url = routes.channelsPath();
-  const data = {
-    attributes: {
-      name,
-    },
-  };
-  try {
-    await axios.post(url, { data });
-  } catch (e) {
-    console.log(e);
-    throw e;
-  }
-};
-
-const removeChannel = async (id) => {
-  const url = routes.channelPath(id);
-  try {
-    await axios.delete(url);
-  } catch (e) {
-    console.log(e);
-    throw e;
-  }
-};
-
-const renameChannel = async (name, id) => {
-  const url = routes.channelPath(id);
-  const data = {
-    attributes: {
-      name,
-    },
-  };
-  try {
-    await axios.patch(url, { data });
-  } catch (e) {
-    console.log(e);
-    throw e;
-  }
-};
-
-const actions = { ...channels.actions };
-export {
-  actions, addChannel, removeChannel, renameChannel,
-};
-export default channels.reducer;
+const actions = { ...channelsSlice.actions };
+export { actions };
+export default channelsSlice.reducer;

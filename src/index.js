@@ -11,6 +11,4 @@ if (process.env.NODE_ENV !== 'production') {
   localStorage.debug = 'chat:*';
 }
 
-const { channels, messages, currentChannelId } = gon;
-
-run({ channels, messages, currentChannelId });
+run(gon);
