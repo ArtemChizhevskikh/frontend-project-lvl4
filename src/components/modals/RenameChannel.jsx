@@ -1,10 +1,17 @@
 import React, { useRef, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { Button, Modal, FormControl } from 'react-bootstrap';
 import { Formik, Form } from 'formik';
-import { renameChannel } from '../../slices/channels.js';
+import axios from 'axios';
+import routes from '../../routes.js';
+import { getValidationSchema } from './AddChannel.jsx';
 
 const RenameChannel = (props) => {
   const { modalInfo: { show, item }, onHide } = props;
+  const channels = useSelector((state) => state.channelsInfo.channels);
+  const channelsNames = channels.map(({ name }) => name);
+  const validationSchema = getValidationSchema(channelsNames);
+
   const inputRef = useRef();
   useEffect(() => {
     inputRef.current.select();
@@ -20,40 +27,44 @@ const RenameChannel = (props) => {
             initialValues={{
               name: item.name,
             }}
-            validate={({ name }) => {
-              const errors = {};
-              if (!name.trim()) {
-                errors.name = 'Required';
-              } else if (name.trim().length < 3 || name.trim().length > 20) {
-                errors.name = 'Must be 3 to 20 characters';
+            validationSchema={validationSchema}
+            onSubmit={async ({ name }, { setErrors }) => {
+              const url = routes.channelPath(item.id);
+              const data = {
+                attributes: {
+                  name: name.trim(),
+                },
+              };
+              try {
+                await axios.patch(url, { data });
+                onHide();
+              } catch (e) {
+                setErrors({ name: e.message });
               }
-              return errors;
-            }}
-            onSubmit={async ({ name }) => {
-              await renameChannel(name.trim(), item.id);
-              onHide();
             }}
           >
             {({
-              handleSubmit,
               handleChange,
+              touched,
               errors,
               values,
               isSubmitting,
             }) => (
-              <Form noValidate onSubmit={handleSubmit}>
+              <Form noValidate>
                 <FormControl
                   name="name"
                   className="mb-2"
                   ref={inputRef}
                   value={values.name}
                   onChange={handleChange}
-                  isInvalid={!!errors.name}
+                  isInvalid={touched.name && !!errors.name}
+                  autoComplete="off"
                 />
-                {errors.name && <FormControl.Feedback type="invalid">{errors.name}</FormControl.Feedback>}
+                {errors.name && touched.name
+                  && <FormControl.Feedback type="invalid" className="d-block">{errors.name}</FormControl.Feedback>}
                 <div className="d-flex justify-content-end">
                   <Button className="mr-2" variant="secondary" disabled={isSubmitting} onClick={onHide}>
-                    Close
+                    Cancel
                   </Button>
                   <Button type="submit" variant="primary" disabled={isSubmitting}>
                     Submit

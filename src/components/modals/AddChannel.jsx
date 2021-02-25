@@ -1,10 +1,28 @@
 import React, { useEffect, useRef } from 'react';
-import { Button, Modal, FormControl } from 'react-bootstrap';
+import { useSelector } from 'react-redux';
+import {
+  Button, Modal, FormControl, FormGroup,
+} from 'react-bootstrap';
 import { Formik, Form } from 'formik';
-import { addChannel } from '../../slices/channels.js';
+import * as yup from 'yup';
+import axios from 'axios';
+import routes from '../../routes.js';
+
+export const getValidationSchema = (channelsNames) => yup.object().shape({
+  name: yup.string()
+    .trim()
+    .min(3, 'Must be 3 to 20 characters')
+    .max(20, 'Must be 3 to 20 characters')
+    .notOneOf(channelsNames, 'Must be unique')
+    .required('Required'),
+});
 
 const AddChannel = (props) => {
   const { modalInfo: { show }, onHide } = props;
+  const channels = useSelector((state) => state.channelsInfo.channels);
+  const channelsNames = channels.map(({ name }) => name);
+  const validationSchema = getValidationSchema(channelsNames);
+
   const inputRef = useRef();
   useEffect(() => {
     inputRef.current.focus();
@@ -21,45 +39,51 @@ const AddChannel = (props) => {
             initialValues={{
               name: '',
             }}
-            validate={({ name }) => {
-              const errors = {};
-              if (!name.trim()) {
-                errors.name = 'Required';
-              } else if (name.trim().length < 3 || name.trim().length > 20) {
-                errors.name = 'Must be 3 to 20 characters';
+            validationSchema={validationSchema}
+            onSubmit={async ({ name }, { setErrors }) => {
+              const url = routes.channelsPath();
+              const data = {
+                attributes: {
+                  name: name.trim(),
+                },
+              };
+              try {
+                await axios.post(url, { data });
+                onHide();
+              } catch (e) {
+                setErrors({ name: e.message });
               }
-              return errors;
-            }}
-            onSubmit={async ({ name }) => {
-              await addChannel(name.trim());
-              onHide();
             }}
           >
             {({
-              handleSubmit,
               handleChange,
+              touched,
               errors,
               values,
               isSubmitting,
             }) => (
-              <Form noValidate onSubmit={handleSubmit}>
-                <FormControl
-                  name="name"
-                  className="mb-2"
-                  ref={inputRef}
-                  value={values.name}
-                  onChange={handleChange}
-                  isInvalid={!!errors.name}
-                />
-                {errors.name && <FormControl.Feedback type="invalid">{errors.name}</FormControl.Feedback>}
-                <div className="d-flex justify-content-end">
-                  <Button className="mr-2" variant="secondary" disabled={isSubmitting} onClick={onHide}>
-                    Close
-                  </Button>
-                  <Button type="submit" variant="primary" disabled={isSubmitting}>
-                    Submit
-                  </Button>
-                </div>
+              <Form noValidate>
+                <FormGroup>
+                  <FormControl
+                    name="name"
+                    className="mb-2"
+                    ref={inputRef}
+                    value={values.name}
+                    onChange={handleChange}
+                    isInvalid={touched.name && !!errors.name}
+                    autoComplete="off"
+                  />
+                  {errors.name && touched.name
+                  && <FormControl.Feedback type="invalid" className="d-block">{errors.name}</FormControl.Feedback>}
+                  <div className="d-flex justify-content-end">
+                    <Button className="mr-2" variant="secondary" disabled={isSubmitting} onClick={onHide}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={isSubmitting}>
+                      Submit
+                    </Button>
+                  </div>
+                </FormGroup>
               </Form>
             )}
           </Formik>
